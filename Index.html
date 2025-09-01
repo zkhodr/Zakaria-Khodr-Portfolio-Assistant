@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Zakaria Khodr</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            max-height: 700px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4c6ef5 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .avatar.bot {
+            background: linear-gradient(135deg, #4c6ef5, #7c3aed);
+        }
+
+        .avatar.user {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+        }
+
+        .message-content {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+        }
+
+        .follow-up-questions {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .follow-up-title {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .follow-up-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .follow-up-chip {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 15px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #374151;
+        }
+
+        .follow-up-chip:hover {
+            background: #4c6ef5;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .suggested-questions {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            background: rgba(248, 250, 252, 0.8);
+        }
+
+        .suggested-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .question-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .question-chip {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #374151;
+        }
+
+        .question-chip:hover {
+            border-color: #4c6ef5;
+            background: #4c6ef5;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 20px;
+            gap: 10px;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            outline: none;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: #4c6ef5;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #4c6ef5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 15px;
+            background: #f3f4f6;
+            border-radius: 15px;
+            max-width: fit-content;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .welcome-message {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 2px solid #0ea5e9;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .welcome-message h3 {
+            color: #0369a1;
+            margin-bottom: 10px;
+        }
+
+        .welcome-message p {
+            color: #0284c7;
+            font-size: 0.9rem;
+        }
+
+        .context-indicator {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .chat-container {
+                height: 100vh;
+                max-height: none;
+                border-radius: 0;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .question-chips {
+                flex-direction: column;
+            }
+
+            .question-chip {
+                text-align: center;
+            }
+
+            .chat-header h1 {
+                font-size: 1.2rem;
+            }
+
+            .status-indicator {
+                position: static;
+                transform: none;
+                justify-content: center;
+                margin-top: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0;
+            }
+
+            .chat-messages {
+                padding: 15px;
+            }
+
+            .chat-input {
+                padding: 15px;
+            }
+
+            .suggested-questions {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Chat with Zakaria Khodr</h1>
+            <p>Product Marketing Leader | Industrial Automation Expert</p>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span style="font-size: 0.8rem;">Online</span>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <h3>👋 Welcome!</h3>
+                <p>I'm here to share insights about my product marketing journey in industrial automation. I love discussing the intersection of technology and business strategy, especially when it comes to complex B2B systems. What would you like to explore together?</p>
+            </div>
+        </div>
+
+        <div class="suggested-questions">
+            <div class="suggested-title">💡 Great starting points:</div>
+            <div class="question-chips">
+                <div class="question-chip" onclick="askQuestion('What roles interest you most?')">What roles interest you most?</div>
+                <div class="question-chip" onclick="askQuestion('Tell me about your VFD expertise')">Tell me about your VFD expertise</div>
+                <div class="question-chip" onclick="askQuestion('What are your biggest wins?')">What are your biggest wins?</div>
+                <div class="question-chip" onclick="askQuestion('Why do you love product marketing?')">Why do you love product marketing?</div>
+                <div class="question-chip" onclick="askQuestion('What was challenging about BlackBerry?')">What was challenging about BlackBerry?</div>
+                <div class="question-chip" onclick="askQuestion('How do you approach new markets?')">How do you approach new markets?</div>
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <input type="text" class="input-field" id="messageInput" placeholder="Ask me about my experience, challenges, or what drives me..." 
+                   onkeypress="handleKeyPress(event)">
+            <button class="send-button" onclick="sendMessage()" id="sendButton">
+                ▶
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Conversation context and memory
+        let conversationHistory = [];
+        let conversationContext = {
+            topicsDiscussed: [],
+            audienceType: 'general',
+            conversationDepth: 0,
+            lastTopicCategory: null,
+            userInterests: []
+        };
+
+        const responses = {
+            'roles': {
+                keywords: ['role', 'target', 'position', 'job', 'looking for', 'seeking', 'career', 'motorola', 'interest'],
+                response: (context) => {
+                    const baseResponse = `You know, I'm really excited about three specific opportunities right now:
+
+**Motorola Solutions - Services Product Manager** is fascinating because it combines video security with access control - areas where I've seen how critical reliability and integration are from my BlackBerry IVY work with safety systems.
+
+**Communication System Project Manager roles** really speak to me because they blend technical complexity with stakeholder management - something I've gotten quite good at coordinating AWS partnerships and cross-functional teams.
+
+**Industrial Automation Product Marketing** feels like a natural evolution of my VFD research and QNX positioning work. There's something satisfying about translating complex motor control systems into compelling business narratives.`;
+                    
+                    return {
+                        text: baseResponse,
+                        followUps: context.conversationDepth === 0 ? 
+                            ['What draws you to Motorola specifically?', 'Tell me about a challenging project coordination', 'How do you research new technical markets?'] :
+                            ['What excites you most about these roles?', 'How do you evaluate role fit?', 'What questions do you have for employers?']
+                    };
+                }
+            },
+            'vfd': {
+                keywords: ['vfd', 'variable frequency', 'motor control', 'industrial', 'automation', 'rockwell', 'powerflex', 'expertise'],
+                response: (context) => {
+                    let response = `My VFD expertise actually started from curiosity and grew into genuine appreciation for these systems. `;
+                    
+                    if (context.topicsDiscussed.includes('blackberry')) {
+                        response += `Building on what we discussed about BlackBerry - that's where I first dove deep into Rockwell's PowerFlex® systems. `;
+                    }
+                    
+                    response += `What struck me was how VFDs sit at this critical intersection of hardware reliability and software intelligence.
+
+**Technical Understanding**: I've studied how VFDs integrate with safety-critical systems, the real-time control requirements, and why motor coordination reliability is non-negotiable in industrial settings.
+
+**Market Positioning**: Through my QNX work, I learned to position complex technologies for environments where failure isn't an option - exactly what VFD applications demand.
+
+**Systems Thinking**: My experience with multi-system API synchronization mirrors the complexity of VFD deployment logic, especially in integrated industrial environments.`;
+
+                    const audienceBasedFollowUps = context.audienceType === 'technical' ? 
+                        ['What specific VFD challenges interest you?', 'How do you see VFD technology evolving?', 'What about integration complexity?'] :
+                        ['How do you explain VFDs to non-technical audiences?', 'What business impact do VFDs create?', 'What markets use VFDs most?'];
+
+                    return {
+                        text: response,
+                        followUps: audienceBasedFollowUps
+                    };
+                }
+            },
+            'achievements': {
+                keywords: ['achievement', 'accomplish', 'success', 'impact', 'result', 'key project', 'highlight', 'win', 'biggest'],
+                response: (context) => {
+                    let response = `I'm proud of several achievements, though I'll be honest - the most meaningful ones were collaborative efforts:\n\n`;
+                    
+                    if (context.topicsDiscussed.includes('roles') || context.topicsDiscussed.includes('motorola')) {
+                        response += `**Emergency Systems Success** (relevant to Motorola's mission): Achieved 70% adoption in 90 days for facility-wide emergency systems - taught me how critical user adoption is for safety applications.\n\n`;
+                    }
+                    
+                    response += `**Product Launch Impact**:
+• 45% increase in qualified inquiries through strategic automation SaaS positioning
+• 3x boost in QNX engagement from OEMs through targeted research and positioning
+• 70% reduction in integration time via thoughtful BlackBerry IVY onboarding redesign
+
+**Operational Excellence**:
+• Cut prototyping cycles by 90% with virtual ECU demos - this one was particularly satisfying
+• Improved response efficiency by 85% through performance dashboard design
+• Enhanced P&L forecast accuracy by 35% via strategic cost modeling
+
+**Team & Partnership Success**:
+• Led Agile transformations with 60% velocity improvement
+• Coordinated complex AWS partnerships for edge-to-cloud solutions`;
+
+                    const contextualFollowUps = context.conversationDepth > 1 ? 
+                        ['What made the emergency systems project challenging?', 'How do you measure success beyond metrics?', 'What failure taught you the most?'] :
+                        ['Which achievement are you most proud of?', 'How do you approach measuring impact?', 'What was your biggest learning?'];
+
+                    return {
+                        text: response,
+                        followUps: contextualFollowUps
+                    };
+                }
+            },
+            'product marketing': {
+                keywords: ['product marketing', 'marketing', 'positioning', 'messaging', 'go-to-market', 'gtm', 'love', 'why'],
+                response: (context) => {
+                    let response = `Product marketing feels like where I'm meant to be, honestly. `;
+                    
+                    if (context.topicsDiscussed.includes('vfd') || context.topicsDiscussed.includes('technical')) {
+                        response += `You know how we talked about technical complexity? That's exactly what draws me to product marketing - `;
+                    }
+                    
+                    response += `I love being the translator between "how it works" and "why it matters."
+
+**What energizes me most**:
+• **Puzzle-solving**: Taking something complex like QNX RTOS or VFD systems and finding the compelling story that resonates with buyers
+• **Cross-functional collaboration**: Being the bridge between engineering brilliance and market reality
+• **Impact measurement**: I'm genuinely excited by behavioral metrics and what they tell us about user needs
+
+**My approach**:
+I don't just create messaging - I test it, measure it, and iterate. Whether it's tracking 45% increases in qualified inquiries or analyzing why certain features drive adoption, I let data guide strategy.
+
+**The human element**:
+What I've learned is that even in B2B technology, you're ultimately solving human problems. Engineers need reliable motor control. Safety teams need systems that work under pressure. My job is connecting technical capabilities to those real needs.`;
+
+                    const personalFollowUps = context.conversationDepth > 0 ? 
+                        ['What aspect of PM frustrates you most?', 'How do you handle technical disagreements?', 'What PM skill are you developing?'] :
+                        ['How do you stay current with tech trends?', 'What makes great product marketing?', 'How do you measure messaging success?'];
+
+                    return {
+                        text: response,
+                        followUps: personalFollowUps
+                    };
+                }
+            },
+            'blackberry': {
+                keywords: ['blackberry', 'ivy', 'qnx', 'rtos', 'aws', 'edge', 'cloud', 'rsa', 'challenging', 'challenge'],
+                response: (context) => {
+                    let isChallengeFocused = context.lastMessage && context.lastMessage.toLowerCase().includes('challeng');
+                    
+                    let response = `BlackBerry was transformative for me - `;
+                    
+                    if (isChallengeFocused) {
+                        response += `and yes, definitely challenging! The biggest challenge was honestly the pivot from consumer brand perception to enterprise reality.
+
+**Real Challenges I Faced**:
+• **Technical Credibility**: Convincing automotive OEMs that BlackBerry could handle safety-critical applications when many still thought "smartphones"
+• **Partnership Complexity**: Coordinating AWS integrations while maintaining QNX real-time requirements - different engineering cultures, different priorities
+• **Market Education**: Writing white papers for audiences who didn't yet understand edge-to-cloud workflows in industrial contexts
+
+**What I learned from the struggles**:
+Sometimes the best product marketing comes from having to overcome skepticism. When you have to prove your technology belongs in safety-critical systems, you develop a much deeper understanding of customer fears and needs.`;
+                    } else {
+                        response += `it's where I learned to think at enterprise scale.
+
+**Key Projects**:
+• **BlackBerry IVY**: Redesigned sensor onboarding (70% time reduction) and optimized safety workflows for real-time data transfer
+• **QNX RTOS**: Positioned for motor control applications, researched Rockwell PowerFlex® integration opportunities  
+• **AWS Partnerships**: Coordinated virtual ECU demos and industrial control workflows
+• **RSA 2023 Launch**: Led go-to-market strategy, boosted GTM efficiency by 70%`;
+                    }
+
+                    const challengeAwareFollowUps = isChallengeFocused ? 
+                        ['How did you overcome the credibility challenge?', 'What would you do differently?', 'How do you handle technical skepticism now?'] :
+                        ['What was most challenging about BlackBerry?', 'How did AWS partnerships work?', 'What did you learn about enterprise sales?'];
+
+                    return {
+                        text: response,
+                        followUps: challengeAwareFollowUps
+                    };
+                }
+            },
+            'approach': {
+                keywords: ['approach', 'how do you', 'method', 'strategy', 'process', 'new market', 'research'],
+                response: (context) => {
+                    let response = `My approach has evolved through experience - and a few mistakes! Here's what I've learned works:
+
+**Research Phase**:
+• **Listen first**: I spend time with sales teams, customer support, and existing users before forming opinions
+• **Competitive intelligence**: Not just feature comparison, but understanding market positioning and messaging gaps
+• **Technical deep-dive**: I need to understand the technology well enough to have credible conversations with engineers
+
+**Positioning Development**:
+• **Pain-point mapping**: What specific problems does this solve, and for whom?
+• **Proof point assembly**: Which metrics and case studies will resonate with different audience segments?
+• **Message testing**: I prefer small-scale validation before big launches
+
+**Go-to-Market Execution**:
+• **Cross-functional alignment**: Engineering, sales, and marketing need to tell consistent stories
+• **Measurement framework**: KPIs that matter to business outcomes, not just marketing metrics
+• **Iterative improvement**: Launch, measure, learn, adjust
+
+**What I've learned the hard way**: `;
+                    
+                    if (context.topicsDiscussed.includes('blackberry') || context.topicsDiscussed.includes('challenge')) {
+                        response += `Sometimes market education takes longer than product development. You can't rush understanding, especially in safety-critical or regulated industries.`;
+                    } else {
+                        response += `Market timing matters as much as product-market fit. The best technology at the wrong time still struggles.`;
+                    }
+
+                    return {
+                        text: response,
+                        followUps: ['What tools do you use for research?', 'How do you validate messaging?', 'What research mistake taught you most?']
+                    };
+                }
+            },
+            'personal': {
+                keywords: ['personality', 'values', 'drive', 'motivate', 'passionate', 'why', 'what drives'],
+                response: (context) => {
+                    return {
+                        text: `What really drives me is the intersection of complexity and clarity. I'm energized by technical challenges that most people find overwhelming - VFD systems, real-time operating systems, edge-to-cloud architectures - and finding ways to make them accessible and compelling.
+
+**My core values in work**:
+• **Intellectual honesty**: If I don't understand something deeply enough, I say so and dig deeper
+• **Collaborative impact**: The best results come from diverse perspectives working together  
+• **Customer empathy**: Technology should solve real problems for real people
+• **Continuous learning**: Industries evolve fast; staying curious is essential
+
+**What energizes me most**:
+Those moments when a complex technical concept clicks for a non-technical audience, or when you find the right messaging that suddenly makes a product's value obvious to buyers.
+
+**What frustrates me**:
+Marketing that prioritizes sizzle over substance, or when technical teams and business teams talk past each other instead of finding common ground.
+
+I think my background in UX design influences how I approach product marketing - I'm always thinking about the user's journey and experience, whether that "user" is an engineer evaluating QNX or a procurement team comparing VFD systems.`,
+                        followUps: ['What work environment brings out your best?', 'How do you handle disagreement?', 'What are you learning about yourself?']
+                    };
+                }
+            },
+            'experience': {
+                keywords: ['experience', 'background', 'work history', 'career', 'previous', 'past', 'tell me about'],
+                response: (context) => {
+                    let response = `My career has been a deliberate progression toward product marketing, though it didn't always feel linear at the time:
+
+**Early Foundation** (2017-2022):
+Started in feature adoption and program management, learning how to measure user behavior and translate insights into actionable improvements. The YMCA work taught me about stakeholder management across diverse groups.
+
+**Technical Depth Building** (2023):
+BlackBerry was my intensive education in enterprise B2B technology. Three different roles - Product Designer, Technical Project Manager, Product Marketing Manager - gave me perspective across the entire product lifecycle.
+
+**Current Focus** (2024-2025):
+SongBird Marketing and St. Joseph's Lifecare let me apply everything I'd learned to drive measurable business impact. The 45% increase in qualified inquiries and 70% emergency system adoption weren't just numbers - they represented real business outcomes.
+
+**Educational Foundation**:
+My UX Design degree (3.9 GPA) gives me a unique lens that many technical marketers lack - I think about user journeys, not just feature lists.`;
+
+                    if (context.conversationDepth > 1) {
+                        response += `\n\nWhat I find interesting looking back is how each role built specific muscles I use today. The technical project management taught me how to coordinate complex stakeholders. The UX design thinking helps me understand user needs beyond stated requirements. The product marketing roles taught me how to measure and optimize messaging effectiveness.`;
+                    }
+
+                    return {
+                        text: response,
+                        followUps: context.conversationDepth === 0 ? 
+                            ['What was your biggest career pivot?', 'How did UX design influence your marketing?', 'What role taught you most?'] :
+                            ['What skill gap are you working on?', 'How do you choose opportunities?', 'What would you tell your younger self?']
+                    };
+                }
+            },
+            'unknown': {
+                response: (context) => {
+                    let contextualResponse = `That's an interesting question! `;
+                    
+                    if (context.topicsDiscussed.length > 0) {
+                        const recentTopic = context.topicsDiscussed[context.topicsDiscussed.length - 1];
+                        contextualResponse += `Building on our conversation about ${recentTopic}, I'd love to explore that further with you. `;
+                    }
+                    
+                    contextualResponse += `While I may not have a specific answer prepared, I'm happy to share my perspective based on my experience in:
+
+• **Product Marketing Strategy** - particularly in B2B technology and industrial automation
+• **Technical Leadership** - from BlackBerry's enterprise platforms to VFD system positioning
+• **Cross-functional Collaboration** - working with engineering, sales, and partnership teams
+• **Market Research & Analysis** - understanding customer needs in complex technical environments
+
+What specific aspect would you like to dive deeper into? I find the best conversations happen when we can explore the nuances together.`;
+
+                    return {
+                        text: contextualResponse,
+                        followUps: ['What challenges are you facing in your role?', 'What industry trends interest you most?', 'How can I help you think through this?']
+                    };
+                }
+            }
+        };
+
+        // Context analysis functions
+        function analyzeAudience(message) {
+            const technicalKeywords = ['api', 'integration', 'architecture', 'system', 'technical', 'engineering', 'development'];
+            const businessKeywords = ['roi', 'revenue', 'market', 'strategy', 'business', 'commercial', 'sales'];
+            
+            const techMatches = technicalKeywords.filter(kw => message.toLowerCase().includes(kw)).length;
+            const bizMatches = businessKeywords.filter(kw => message.toLowerCase().includes(kw)).length;
+            
+            if (techMatches > bizMatches) return 'technical';
+            if (bizMatches > techMatches) return 'business';
+            return 'general';
+        }
+
+        function updateContext(message, responseCategory) {
+            conversationContext.audienceType = analyzeAudience(message);
+            conversationContext.conversationDepth++;
+            conversationContext.lastMessage = message;
+            
+            if (responseCategory && !conversationContext.topicsDiscussed.includes(responseCategory)) {
+                conversationContext.topicsDiscussed.push(responseCategory);
+            }
+            
+            conversationContext.lastTopicCategory = responseCategory;
+        }
+
+        function findBestResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            let bestMatch = null;
+            let highestScore = 0;
+            
+            for (const [key, data] of Object.entries(responses)) {
+                if (key === 'unknown') continue;
+                
+                const keywords = data.keywords;
+                let score = 0;
+                
+                keywords.forEach(keyword => {
+                    if (lowerMessage.includes(keyword.toLowerCase())) {
+                        score += keyword.length; // Longer matches get higher scores
+                    }
+                });
+                
+                if (score > highestScore) {
+                    highestScore = score;
+                    bestMatch = key;
+                }
+            }
+            
+            updateContext(message, bestMatch);
+            
+            if (bestMatch) {
+                const response = responses[bestMatch].response(conversationContext);
+                return {
+                    text: response.text || response,
+                    followUps: response.followUps || []
+                };
+            } else {
+                const response = responses.unknown.response(conversationContext);
+                return {
+                    text: response.text || response,
+                    followUps: response.followUps || []
+                };
+            }
+        }
+
+        function addMessage(text, isUser = false, isTyping = false, followUps = []) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            if (isTyping) {
+                messageDiv.innerHTML = `
+                    <div class="avatar bot">Z</div>
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                `;
+            } else {
+                const avatarText = isUser ? 'You' : 'Z';
+                const avatarClass = isUser ? 'user' : 'bot';
+                
+                let contextIndicator = '';
+                if (!isUser && conversationContext.conversationDepth > 1) {
+                    contextIndicator = `<div class="context-indicator">Building on our conversation...</div>`;
+                }
+                
+                let followUpSection = '';
+                if (!isUser && followUps && followUps.length > 0) {
+                    followUpSection = `
+                        <div class="follow-up-questions">
+                            <div class="follow-up-title">💭 You might also ask:</div>
+                            <div class="follow-up-chips">
+                                ${followUps.map(q => `<div class="follow-up-chip" onclick="askQuestion('${q.replace(/'/g, "\\'")}')">${q}</div>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                messageDiv.innerHTML = `
+                    <div class="avatar ${avatarClass}">${avatarText}</div>
+                    <div class="message-content">
+                        ${contextIndicator}
+                        ${text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
+                        ${followUpSection}
+                    </div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return messageDiv;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Store message in conversation history
+            conversationHistory.push({ type: 'user', message: message, timestamp: Date.now() });
+            
+            // Add user message
+            addMessage(message, true);
+            
+            // Clear input and disable send button
+            input.value = '';
+            sendButton.disabled = true;
+            
+            // Add typing indicator
+            const typingMessage = addMessage('', false, true);
+            
+            // Simulate thinking time (more realistic for complex responses)
+            const thinkingTime = 1200 + Math.random() * 2000; // 1.2-3.2 seconds
+            
+            setTimeout(() => {
+                // Remove typing indicator
+                typingMessage.remove();
+                
+                // Get AI response
+                const response = findBestResponse(message);
+                
+                // Store response in conversation history
+                conversationHistory.push({ 
+                    type: 'bot', 
+                    message: response.text, 
+                    followUps: response.followUps,
+                    timestamp: Date.now() 
+                });
+                
+                // Add bot response with follow-ups
+                addMessage(response.text, false, false, response.followUps);
+                
+                // Re-enable send button and focus input
+                sendButton.disabled = false;
+                input.focus();
+            }, thinkingTime);
+        }
+
+        function askQuestion(question) {
+            document.getElementById('messageInput').value = question;
+            sendMessage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Initialize chat
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('messageInput').focus();
+            
+            // Add welcome message to conversation history
+            conversationHistory.push({
+                type: 'bot',
+                message: 'Welcome! I\'m here to share insights about my product marketing journey.',
+                timestamp: Date.now()
+            });
+            
+            // Add some initial animation delay to messages
+            const messages = document.querySelectorAll('.message');
+            messages.forEach((message, index) => {
+                message.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>
